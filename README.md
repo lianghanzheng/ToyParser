@@ -9,3 +9,15 @@
 依赖：
 1. gcc/clang编译器
 2. boost库 (本人使用的是1.83.0)
+
+## 添加program节点
+
+在lesson1-1中，我们直接将数字字面量节点作为了整个程序。虽然是通过 `program` 进行的解析，但是并未添加起始符号 `Program`。
+
+现在，我们需要将字符串中的序列解析为token，因此引入了 `Tokenizer`。偷懒起见，对Token的识别可以直接用regex库进行。
+
+本阶段实现目标：
+1. 编写 `Tokenizer` 来识别数字字面量、字符串
+2. `Tokenizer` 能够识别异常状态并输出错误信息
+3. `Tokenizer` 能够跳过空白字符
+4. `Tokenizer` 能够跳过注释

@@ -8,83 +8,73 @@ namespace json = boost::json;
 void
 pretty_print( std::ostream& os, json::value const& jv, std::string* indent = nullptr )
 {
-    std::string indent_;
-    if(! indent)
-        indent = &indent_;
-    switch(jv.kind())
-    {
-    case json::kind::object:
-    {
-        os << "{\n";
-        indent->append(4, ' ');
-        auto const& obj = jv.get_object();
-        if(! obj.empty())
-        {
-            auto it = obj.begin();
-            for(;;)
-            {
-                os << *indent << json::serialize(it->key()) << " : ";
-                pretty_print(os, it->value(), indent);
-                if(++it == obj.end())
-                    break;
-                os << ",\n";
-            }
-        }
-        os << "\n";
-        indent->resize(indent->size() - 4);
-        os << *indent << "}";
-        break;
+  std::string indent_;
+  size_t tab_size = 2;
+
+  if(! indent)
+    indent = &indent_;
+  switch(jv.kind()) {
+    case json::kind::object: {
+      os << "{\n";
+      indent->append(tab_size, ' ');
+      auto const& obj = jv.get_object();
+      if(! obj.empty()) {
+        auto it = obj.begin();
+        for(;;) {
+          os << *indent << json::serialize(it->key()) << " : ";
+          pretty_print(os, it->value(), indent);
+          if(++it == obj.end()) break;
+          os << ",\n";
+        }}
+      os << "\n";
+      indent->resize(indent->size() - tab_size);
+      os << *indent << "}";
+      break;
     }
 
-    case json::kind::array:
-    {
-        os << "[\n";
-        indent->append(4, ' ');
-        auto const& arr = jv.get_array();
-        if(! arr.empty())
-        {
-            auto it = arr.begin();
-            for(;;)
-            {
-                os << *indent;
-                pretty_print( os, *it, indent);
-                if(++it == arr.end())
-                    break;
-                os << ",\n";
-            }
-        }
-        os << "\n";
-        indent->resize(indent->size() - 4);
-        os << *indent << "]";
-        break;
+    case json::kind::array: {
+      os << "[\n";
+      indent->append(tab_size, ' ');
+      auto const& arr = jv.get_array();
+      if(! arr.empty()) {
+        auto it = arr.begin();
+        for(;;) {
+          os << *indent;
+          pretty_print( os, *it, indent);
+          if(++it == arr.end()) break;
+            os << ",\n";
+        }}
+      os << "\n";
+      indent->resize(indent->size() - tab_size);
+      os << *indent << "]";
+      break;
     }
 
-    case json::kind::string:
-    {
-        os << json::serialize(jv.get_string());
-        break;
+    case json::kind::string: {
+      os << json::serialize(jv.get_string());
+      break;
     }
 
     case json::kind::uint64:
     case json::kind::int64:
     case json::kind::double_:
-        os << jv;
-        break;
+      os << jv;
+      break;
 
     case json::kind::bool_:
-        if(jv.get_bool())
-            os << "true";
-        else
-            os << "false";
+      if(jv.get_bool())
+        os << "true";
+      else
+        os << "false";
         break;
 
     case json::kind::null:
-        os << "null";
-        break;
-    }
+      os << "null";
+      break;
+  }
 
-    if(indent->empty())
-        os << "\n";
+  if(indent->empty())
+    os << "\n";
 }
 
 class ASTNode {
@@ -95,6 +85,12 @@ public:
 
 protected:
   boost::json::object info;
+};
+
+class ProgramRoot: public ASTNode {
+public:
+  ProgramRoot(ASTNode *num_literal)
+    : ASTNode("Program") { this->info["body"] = num_literal->getInfo(); }
 };
 
 class NumLiteralNode: public ASTNode {
@@ -119,7 +115,7 @@ public:
     // Parse recursively starting from main entry
     // TODO: 
 
-    return this->program();
+    return this->Program();
   }
 
   /**
@@ -129,8 +125,8 @@ public:
    *   : NumericalLiteral
    *   ;
    */
-  ASTNode *program() {
-    return this->NumericLiteral();
+  ASTNode *Program() {
+    return new ProgramRoot(this->NumericLiteral());
   }
 
   /**
